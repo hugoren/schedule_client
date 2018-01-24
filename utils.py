@@ -29,7 +29,7 @@ def log(level, message):
 
 def file_sync(msg):
     try:
-        with open('{0}'.format(msg.get('file_name')), 'w') as f:
+        with open('scripts/{0}'.format(msg.get('file_name')), 'w') as f:
             f.writelines(msg.get('content'))
         send_data = {"jid": msg.get("jid"), "retcode": 0, "stdout": "{0} sync success".format(msg.get("file_name"))}
         log("info", "{0} 文件同步完成".format(msg.get('file_name')))
@@ -40,20 +40,3 @@ def file_sync(msg):
         log("error", "{0} 文件同步异常, {1}".format(msg.get('file_name'), e))
         return send_data
 
-
-def command(jid, cmd, user='su'):
-    timeout = 300
-    kill = lambda process: process.kill()
-    p = subprocess.Popen(args=[user, '-l', '-c', cmd], stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=-1)
-    my_timer = Timer(timeout, kill, [p])
-    try:
-        out, err = None, None
-        my_timer.start()
-        pid = p.pid
-        code = p.wait()
-        out, err = p.communicate()
-    finally:
-        if my_timer.finished._Event__flag:
-            my_timer.cancel()
-            log('error', 'the {0} is waiting ,so close it'.format(pid))
-        return {"jid": jid, 'retcode': 0, 'stderr': err, 'stdout': out}
